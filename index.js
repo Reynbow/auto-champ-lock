@@ -21,6 +21,8 @@ const championSelect = new ChampionSelect();
 const autoAcceptCheckbox = new Checkbox("Accept", "controladoAutoAccept");
 const pickCheckbox = new Checkbox("Pick", "controladoPick");
 const banCheckbox = new Checkbox("Ban", "controladoBan");
+const LOCK_IN_CONFIG_KEY = "controladoLockIn";
+const LOCK_IN_TOGGLE_ID = "controlado-lock-in-toggle";
 
 const ROLE_ICON_URLS = {
  top: "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/icon-position-top.png",
@@ -89,6 +91,66 @@ const allChampionsBanDropdown = new Dropdown(
 
 function getSocialContainer() {
  return document.querySelector(".lol-social-roster");
+}
+
+function getLockInConfig() {
+ const config = DataStore.get(LOCK_IN_CONFIG_KEY);
+ if (config && typeof config.enabled === "boolean") {
+  return config;
+ }
+ const fallback = { enabled: true };
+ DataStore.set(LOCK_IN_CONFIG_KEY, fallback);
+ return fallback;
+}
+
+function setLockInEnabled(enabled) {
+ const config = getLockInConfig();
+ config.enabled = Boolean(enabled);
+ DataStore.set(LOCK_IN_CONFIG_KEY, config);
+}
+
+function getChampSelectToggle() {
+ return document.querySelector(`#${LOCK_IN_TOGGLE_ID}`);
+}
+
+function mountChampSelectLockInToggle() {
+ const existing = getChampSelectToggle();
+ if (existing) {
+  return;
+ }
+
+ const wrapper = document.createElement("label");
+ wrapper.id = LOCK_IN_TOGGLE_ID;
+ wrapper.classList.add("controlado-lock-in-toggle");
+
+ const input = document.createElement("input");
+ input.type = "checkbox";
+ input.checked = getLockInConfig().enabled !== false;
+ input.classList.add("controlado-lock-in-native-input");
+
+ const box = document.createElement("span");
+ box.classList.add("controlado-lock-in-box");
+
+ const text = document.createElement("span");
+ text.classList.add("controlado-lock-in-text");
+ text.innerText = "Lock in";
+
+ const syncState = () => {
+  wrapper.classList.toggle("is-enabled", input.checked);
+  setLockInEnabled(input.checked);
+ };
+ input.addEventListener("change", syncState);
+ syncState();
+
+ wrapper.append(input, box, text);
+ document.body.appendChild(wrapper);
+}
+
+function unmountChampSelectLockInToggle() {
+ const existing = getChampSelectToggle();
+ if (existing) {
+  existing.remove();
+ }
 }
 
 function createRoleRow(dropdownElement) {
@@ -171,6 +233,72 @@ function injectStyles() {
 
 .auto-select-role-dropdown {
  flex: 1;
+}
+
+.controlado-lock-in-toggle {
+ position: fixed;
+ left: calc(50% + 247px);
+ bottom: 18px;
+ z-index: 9999;
+ display: inline-flex;
+ align-items: center;
+ gap: 7px;
+ height: 34px;
+ padding: 0 10px;
+ border: 1px solid #7b5d2c;
+ box-shadow: inset 0 0 0 1px rgba(200, 170, 110, 0.32);
+ background: linear-gradient(180deg, #1b2734 0%, #101a25 100%);
+ color: #c8aa6e;
+ font-size: 12px;
+ font-weight: 700;
+ letter-spacing: 0.5px;
+ text-transform: uppercase;
+ font-family: "Beaufort for LOL", "Times New Roman", serif;
+ user-select: none;
+ cursor: pointer;
+ transition: filter 120ms ease, border-color 120ms ease;
+}
+
+.controlado-lock-in-toggle:hover {
+ border-color: #c8aa6e;
+ filter: brightness(1.05);
+}
+
+.controlado-lock-in-native-input {
+ position: absolute;
+ opacity: 0;
+ pointer-events: none;
+}
+
+.controlado-lock-in-box {
+ width: 13px;
+ height: 13px;
+ border: 1px solid #7b5d2c;
+ background: #0c151f;
+ box-shadow: inset 0 0 0 1px rgba(200, 170, 110, 0.2);
+ position: relative;
+ flex: 0 0 auto;
+}
+
+.controlado-lock-in-text {
+ line-height: 1;
+}
+
+.controlado-lock-in-toggle.is-enabled .controlado-lock-in-box {
+ border-color: #c8aa6e;
+ box-shadow: inset 0 0 0 1px rgba(200, 170, 110, 0.5);
+}
+
+.controlado-lock-in-toggle.is-enabled .controlado-lock-in-box::after {
+ content: "";
+ position: absolute;
+ left: 3px;
+ top: 0px;
+ width: 4px;
+ height: 8px;
+ border: solid #c8aa6e;
+ border-width: 0 2px 2px 0;
+ transform: rotate(45deg);
 }
 `;
  document.head.appendChild(style);
@@ -287,10 +415,24 @@ window.addEventListener("load", async () => {
   }
   if (parsedEvent.data === "ChampSelect") {
    championSelect.mount();
+   mountChampSelectLockInToggle();
   } else {
    championSelect.unmount();
+   unmountChampSelectLockInToggle();
   }
  });
+
+ const phaseResponse = await request("GET", "/lol-gameflow/v1/gameflow-phase");
+ if (phaseResponse.ok) {
+  const phase = await phaseResponse.json();
+  if (phase === "ChampSelect") {
+   championSelect.mount();
+   mountChampSelectLockInToggle();
+  } else {
+   championSelect.unmount();
+   unmountChampSelectLockInToggle();
+  }
+ }
 
  console.debug("auto-champion-select-role-picks: loaded");
 });

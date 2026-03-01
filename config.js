@@ -2,6 +2,9 @@ const defaultPluginConfig = {
  controladoAutoAccept: {
   enabled: false
  },
+ controladoLockIn: {
+  enabled: true
+ },
  controladoPick: {
   enabled: false,
   force: false,

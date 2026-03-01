@@ -177,6 +177,8 @@ export class ChampionSelect {
  async task() {
   const pickConfig = normalizePickConfig(getConfig("controladoPick"));
   const banConfig = normalizeBanConfig(getConfig("controladoBan"));
+  const lockInConfig = getConfig("controladoLockIn");
+  const shouldLockIn = lockInConfig.enabled !== false;
 
   if (!pickConfig.enabled && !banConfig.enabled) {
    return;
@@ -225,8 +227,12 @@ export class ChampionSelect {
      }
     }
 
-    console.debug(`auto-champion-select-role-picks: Trying to ${subAction.type} ${championId}${localRole ? ` for ${localRole}` : ""}...`);
-    const response = await this.selectChampion(subAction.id, championId);
+    if (!shouldLockIn && subAction.championId == championId) {
+     continue;
+    }
+
+    console.debug(`auto-champion-select-role-picks: Trying to ${subAction.type} ${championId}${localRole ? ` for ${localRole}` : ""}${shouldLockIn ? " (lock in)" : " (hover only)"}...`);
+    const response = await this.selectChampion(subAction.id, championId, shouldLockIn);
     if (!response.ok) {
      return;
     }
@@ -248,9 +254,9 @@ export class ChampionSelect {
   );
  }
 
- selectChampion(actionId, championId) {
+ selectChampion(actionId, championId, shouldLockIn) {
   const endpoint = `/lol-champ-select/v1/session/actions/${actionId}`;
-  const body = { championId, completed: true };
+  const body = { championId, completed: shouldLockIn };
   return request("PATCH", endpoint, { body });
  }
 }
