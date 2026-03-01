@@ -1,4 +1,4 @@
-# Auto Champion Select (Role Picks Fork)
+# Auto Champ Lock
 
 Fork of `auto-champion-select` with:
 

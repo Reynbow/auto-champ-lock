@@ -1,7 +1,7 @@
 /**
  * @author balaclava + fork by reynbow
- * @name auto-champion-select-role-picks
- * @link https://github.com/controlado/auto-champion-select
+ * @name auto-champ-lock
+ * @link https://github.com/Reynbow/auto-champ-lock
  * @description 1 ban + role-based auto pick (top/jungle/mid/support/adc)
  */
 
@@ -166,11 +166,11 @@ function createRoleRow(dropdownElement) {
 }
 
 function injectStyles() {
- if (document.querySelector("#auto-champion-select-role-picks-style")) {
+ if (document.querySelector("#auto-champ-lock-style")) {
   return;
  }
  const style = document.createElement("style");
- style.id = "auto-champion-select-role-picks-style";
+ style.id = "auto-champ-lock-style";
  style.textContent = `
 .dropdown-champions-default {
  position: inherit;
@@ -308,7 +308,7 @@ async function getPlayableChampions() {
  let response = await request("GET", "/lol-champions/v1/owned-champions-minimal");
 
  while (!response.ok) {
-  console.debug("auto-champion-select-role-picks(owned-champions-minimal): Retrying...");
+  console.debug("auto-champ-lock(owned-champions-minimal): Retrying...");
   response = await request("GET", "/lol-champions/v1/owned-champions-minimal");
   await sleep(1000);
  }
@@ -327,7 +327,7 @@ async function getAllChampions() {
 
 async function onReadyCheck() {
  if (autoAcceptCheckbox.config.enabled === true) {
-  console.debug("auto-champion-select-role-picks(auto-accept): Ready check detected, accepting in 2 seconds...");
+  console.debug("auto-champ-lock(auto-accept): Ready check detected, accepting in 2 seconds...");
   await sleep(2000);
   await autoAccept();
  }
@@ -336,9 +336,9 @@ async function onReadyCheck() {
 async function autoAccept() {
  const response = await request("POST", "/lol-matchmaking/v1/ready-check/accept");
  if (response.ok) {
-  console.debug("auto-champion-select-role-picks(auto-accept): Accepted ready check");
+  console.debug("auto-champ-lock(auto-accept): Accepted ready check");
  } else {
-  console.error("auto-champion-select-role-picks(auto-accept): Failed to accept ready check", response);
+  console.error("auto-champ-lock(auto-accept): Failed to accept ready check", response);
  }
 }
 
@@ -365,7 +365,7 @@ window.addEventListener("load", async () => {
   createRoleRow(allChampionsBanDropdown.element)
  );
 
- const pluginSection = new SocialSection("Auto champion select", dropdownsContainer, checkboxesContainer);
+ const pluginSection = new SocialSection("Auto Champ Lock", dropdownsContainer, checkboxesContainer);
  socialContainer.append(pluginSection.element, checkboxesContainer, dropdownsContainer);
 
  await Promise.all([
@@ -397,7 +397,7 @@ window.addEventListener("load", async () => {
 
  linkEndpoint("/lol-inventory/v1/wallet", async parsedEvent => {
   if (parsedEvent.eventType === "Update") {
-   console.debug("auto-champion-select-role-picks(wallet): Refreshing dropdowns...");
+   console.debug("auto-champ-lock(wallet): Refreshing dropdowns...");
    await Promise.all([
     topPlayableChampionsDropdown.refresh(),
     junglePlayableChampionsDropdown.refresh(),
@@ -434,5 +434,5 @@ window.addEventListener("load", async () => {
   }
  }
 
- console.debug("auto-champion-select-role-picks: loaded");
+ console.debug("auto-champ-lock: loaded");
 });

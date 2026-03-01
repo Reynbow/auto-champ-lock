@@ -1,4 +1,4 @@
-const pluginGroup = "Balaclava: Auto Champion Select (Role Picks)";
+const pluginGroup = "Reynbow: Auto Champ Lock";
 
 class Action {
  constructor(id, name, legend, tags, group, callback, toasts) {

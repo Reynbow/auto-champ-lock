@@ -187,7 +187,7 @@ export class ChampionSelect {
   const localRole = this.getLocalRole();
   const localPlayerSubActions = this.getLocalPlayerSubActions();
   if (localPlayerSubActions.length === 0) {
-   console.debug("auto-champion-select-role-picks: No local player sub actions found, skipping...");
+   console.debug("auto-champ-lock: No local player sub actions found, skipping...");
    this.unmount();
    return;
   }
@@ -207,22 +207,22 @@ export class ChampionSelect {
      continue;
     }
     if (this.allBans.some(bannedChampionId => bannedChampionId == championId)) {
-     console.debug(`auto-champion-select-role-picks: ${subAction.type} ${championId} already banned, skipping...`);
+     console.debug(`auto-champ-lock: ${subAction.type} ${championId} already banned, skipping...`);
      continue;
     }
     if (subAction.type === "ban" && this.teamIntents.some(playerIntent => playerIntent == championId)) {
      if (config.force === true) {
-      console.debug(`auto-champion-select-role-picks: Banning ${championId} but team intends it, forcing...`);
+      console.debug(`auto-champ-lock: Banning ${championId} but team intends it, forcing...`);
      } else {
-      console.debug(`auto-champion-select-role-picks: Banning ${championId} but team intends it, skipping...`);
+      console.debug(`auto-champ-lock: Banning ${championId} but team intends it, skipping...`);
       continue;
      }
     }
     if (subAction.type === "pick" && this.allPicks.some(player => player.championId == championId)) {
      if (config.force === true) {
-      console.debug(`auto-champion-select-role-picks: Picking ${championId} but already picked, forcing...`);
+      console.debug(`auto-champ-lock: Picking ${championId} but already picked, forcing...`);
      } else {
-      console.debug(`auto-champion-select-role-picks: Picking ${championId} but already picked, skipping...`);
+      console.debug(`auto-champ-lock: Picking ${championId} but already picked, skipping...`);
       continue;
      }
     }
@@ -231,7 +231,7 @@ export class ChampionSelect {
      continue;
     }
 
-    console.debug(`auto-champion-select-role-picks: Trying to ${subAction.type} ${championId}${localRole ? ` for ${localRole}` : ""}${shouldLockIn ? " (lock in)" : " (hover only)"}...`);
+    console.debug(`auto-champ-lock: Trying to ${subAction.type} ${championId}${localRole ? ` for ${localRole}` : ""}${shouldLockIn ? " (lock in)" : " (hover only)"}...`);
     const response = await this.selectChampion(subAction.id, championId, shouldLockIn);
     if (!response.ok) {
      return;
@@ -315,7 +315,7 @@ export class Dropdown {
   try {
    selectedChampionId = this.getSelectedChampionId(this.config);
   } catch (error) {
-   console.error("auto-champion-select-role-picks: Failed reading dropdown config, resetting selection", error);
+   console.error("auto-champ-lock: Failed reading dropdown config, resetting selection", error);
   }
   if (!this.champions.some(champion => selectedChampionId === champion.id)) {
    this.setSelectedChampionId(this.config, this.champions[0].id);
@@ -724,7 +724,7 @@ export class Checkbox {
  }
 
  toggle() {
-  console.debug("auto-champion-select-role-picks: Toggling", this.configKey);
+  console.debug("auto-champ-lock: Toggling", this.configKey);
   this.config.enabled = !this.config.enabled;
   DataStore.set(this.configKey, this.config);
   this.element.toggleAttribute("selected");
