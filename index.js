@@ -365,7 +365,7 @@ window.addEventListener("load", async () => {
   createRoleRow(allChampionsBanDropdown.element)
  );
 
- const pluginSection = new SocialSection("Auto Champ Lock", dropdownsContainer, checkboxesContainer);
+ const pluginSection = new SocialSection("AUTO CHAMP LOCK", dropdownsContainer, checkboxesContainer);
  socialContainer.append(pluginSection.element, checkboxesContainer, dropdownsContainer);
 
  await Promise.all([
