@@ -34,7 +34,7 @@ const ROLE_ICON_URLS = {
 };
 
 const topPlayableChampionsDropdown = new Dropdown(
- "Top pick",
+ "TOP",
  "controladoPick",
  getPlayableChampions,
  config => config.championsByRole.top,
@@ -43,7 +43,7 @@ const topPlayableChampionsDropdown = new Dropdown(
  "Top"
 );
 const junglePlayableChampionsDropdown = new Dropdown(
- "Jungle pick",
+ "JUNGLE",
  "controladoPick",
  getPlayableChampions,
  config => config.championsByRole.jungle,
@@ -52,7 +52,7 @@ const junglePlayableChampionsDropdown = new Dropdown(
  "Jungle"
 );
 const midPlayableChampionsDropdown = new Dropdown(
- "Mid pick",
+ "MIDDLE",
  "controladoPick",
  getPlayableChampions,
  config => config.championsByRole.mid,
@@ -61,7 +61,7 @@ const midPlayableChampionsDropdown = new Dropdown(
  "Mid"
 );
 const supportPlayableChampionsDropdown = new Dropdown(
- "Support pick",
+ "SUPPORT",
  "controladoPick",
  getPlayableChampions,
  config => config.championsByRole.support,
@@ -70,7 +70,7 @@ const supportPlayableChampionsDropdown = new Dropdown(
  "Support"
 );
 const adcPlayableChampionsDropdown = new Dropdown(
- "ADC pick",
+ "BOTTOM",
  "controladoPick",
  getPlayableChampions,
  config => config.championsByRole.adc,
@@ -80,7 +80,7 @@ const adcPlayableChampionsDropdown = new Dropdown(
 );
 
 const allChampionsBanDropdown = new Dropdown(
- "Ban",
+ "BAN",
  "controladoBan",
  getAllChampions,
  config => config.champion,
