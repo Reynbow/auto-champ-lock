@@ -6,6 +6,16 @@ Fork of `auto-champion-select` with:
 - Five pick slots (top, jungle, mid, support, adc)
 - Automatic role detection in champ select
 
+## Preview
+
+Role-based pick and ban panel:
+
+![Role Pick UI](./screenshots/role-pick-ui.png)
+
+Champ-select lock-in toggle:
+
+![Lock In Toggle](./screenshots/lock-in-toggle.png)
+
 ## Notes
 
 - Uses the same DataStore keys as the original plugin (`controladoPick`, `controladoBan`, `controladoAutoAccept`).
