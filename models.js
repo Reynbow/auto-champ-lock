@@ -232,6 +232,12 @@ export class ChampionSelect {
     }
 
     console.debug(`auto-champ-lock: Trying to ${subAction.type} ${championId}${localRole ? ` for ${localRole}` : ""}${shouldLockIn ? " (lock in)" : " (hover only)"}...`);
+    if (shouldLockIn) {
+     const hoverResponse = await this.selectChampion(subAction.id, championId, false);
+     if (!hoverResponse.ok) return;
+     const lockInDelayMs = subAction.type === "pick" ? 5000 : 1000;
+     await sleep(lockInDelayMs);
+    }
     const response = await this.selectChampion(subAction.id, championId, shouldLockIn);
     if (!response.ok) {
      return;
