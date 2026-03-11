@@ -175,9 +175,13 @@ export class ChampionSelect {
  }
 
  async task() {
+  const lockInConfig = getConfig("controladoLockIn");
+  if (lockInConfig.enabled === false) {
+   return;
+  }
+
   const pickConfig = normalizePickConfig(getConfig("controladoPick"));
   const banConfig = normalizeBanConfig(getConfig("controladoBan"));
-  const lockInConfig = getConfig("controladoLockIn");
   const shouldLockIn = lockInConfig.enabled !== false;
 
   if (!pickConfig.enabled && !banConfig.enabled) {
