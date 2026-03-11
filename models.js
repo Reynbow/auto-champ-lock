@@ -286,6 +286,18 @@ export class Dropdown {
   this.champions = null;
   this.setupInFlight = null;
   this.setupPending = false;
+  this.onPickerClick = null;
+  this.searchPopoverConfig = null;
+  this.searchPopoverEl = null;
+  this.searchPopoverHideTimer = null;
+ }
+
+ setOnPickerClick(callback) {
+  this.onPickerClick = callback;
+ }
+
+ setSearchPopoverConfig(config) {
+  this.searchPopoverConfig = config;
  }
 
  async setup() {
@@ -408,9 +420,24 @@ export class Dropdown {
   });
 
   input.addEventListener("input", (e) => {
-   this.ensureIsOpened();
-   this.filterOptions(e.target.value);
-   filterIcon.classList.toggle("controlado-filter-icon--trash", Boolean(e.target.value));
+   const query = e.target.value;
+   filterIcon.classList.toggle("controlado-filter-icon--trash", Boolean(query));
+   if (this.searchPopoverConfig) {
+    this.showSearchPopover(query);
+   } else {
+    this.ensureIsOpened();
+    this.filterOptions(query);
+   }
+  });
+
+  input.addEventListener("focus", () => {
+   if (this.searchPopoverConfig) this.showSearchPopover(input.value);
+  });
+
+  input.addEventListener("blur", () => {
+   if (this.searchPopoverConfig) {
+    this.searchPopoverHideTimer = setTimeout(() => this.hideSearchPopover(), 150);
+   }
   });
 
   ["pointerdown", "click"].forEach((type) => {
@@ -432,6 +459,74 @@ export class Dropdown {
   options.forEach(option => {
    option.style.display = option.innerText.toLowerCase().includes(query.toLowerCase()) ? "" : "none";
   });
+ }
+
+ showSearchPopover(query) {
+  if (!this.searchPopoverConfig?.getChampionIconUrl || !this.champions) return;
+  if (this.searchPopoverHideTimer) {
+   clearTimeout(this.searchPopoverHideTimer);
+   this.searchPopoverHideTimer = null;
+  }
+  const q = (query || "").toLowerCase().trim();
+  let filtered = this.champions.filter(c => c.name && c.name.toLowerCase().includes(q));
+  const isPick = this.configKey === "controladoPick";
+  if (isPick && (q === "" || "random".includes(q))) {
+   filtered = [{ id: -1, championId: -1, name: "Random" }, ...filtered];
+  }
+  if (filtered.length === 0) {
+   this.hideSearchPopover();
+   return;
+  }
+  if (!this.searchPopoverEl) {
+   this.searchPopoverEl = document.createElement("div");
+   this.searchPopoverEl.className = "controlado-search-popover";
+   document.body.appendChild(this.searchPopoverEl);
+  }
+  this.searchPopoverEl.innerHTML = "";
+  for (const champ of filtered) {
+   const champId = champ.id ?? champ.championId;
+   if (champId == null) continue;
+   const item = document.createElement("div");
+   item.className = "controlado-search-popover-item";
+   const img = document.createElement("div");
+   img.className = "controlado-search-popover-portrait" + (champId === -1 ? " controlado-search-popover-random" : "");
+   img.style.backgroundImage = champId !== -1 ? `url('${this.searchPopoverConfig.getChampionIconUrl(champ) || ""}')` : "none";
+   const name = document.createElement("span");
+   name.className = "controlado-search-popover-name";
+   name.textContent = champ.name;
+   item.append(img, name);
+   item.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    this.setSelectedChampionId(this.config, champId);
+    DataStore.set(this.configKey, this.config);
+    this.shadowRoot((root) => {
+     const inp = root.querySelector("#controlado-search");
+     if (inp) { inp.value = ""; inp.blur(); }
+    });
+    this.hideSearchPopover();
+    this.refresh();
+   });
+   this.searchPopoverEl.appendChild(item);
+  }
+  const rect = this.element.getBoundingClientRect();
+  const marginRight = -6;
+  const viewportW = document.documentElement.clientWidth || window.innerWidth;
+  const maxW = Math.max(200, viewportW - rect.left - marginRight);
+  this.searchPopoverEl.style.left = `${rect.left}px`;
+  this.searchPopoverEl.style.right = "";
+  this.searchPopoverEl.style.width = `${Math.min(Math.max(rect.width, 200), maxW)}px`;
+  this.searchPopoverEl.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+  this.searchPopoverEl.classList.add("controlado-search-popover-visible");
+ }
+
+ hideSearchPopover() {
+  if (this.searchPopoverHideTimer) {
+   clearTimeout(this.searchPopoverHideTimer);
+   this.searchPopoverHideTimer = null;
+  }
+  if (this.searchPopoverEl) {
+   this.searchPopoverEl.classList.remove("controlado-search-popover-visible");
+  }
  }
 
  refresh() {
@@ -469,12 +564,22 @@ export class Dropdown {
    this.injectRoleIcon(root);
    this.removeDropdownHandleElements(root);
 
-   const currentDropdown = root.querySelector(".ui-dropdown-current");
-   if (currentDropdown) {
-    currentDropdown.style.paddingRight = "8px";
+  const currentDropdown = root.querySelector(".ui-dropdown-current");
+  if (currentDropdown) {
+   currentDropdown.style.paddingRight = "8px";
+   if (this.onPickerClick && !currentDropdown.dataset.controladoPickerBound) {
+    currentDropdown.dataset.controladoPickerBound = "1";
+    currentDropdown.addEventListener("click", (e) => {
+     if (!e.isTrusted) return;
+     if (e.target.closest("#controlado-placeholder")) return;
+     e.preventDefault();
+     e.stopPropagation();
+     this.onPickerClick(this);
+    }, true);
    }
+  }
 
-   const dropdownMenu = root.querySelector(".ui-dropdown-options-container");
+  const dropdownMenu = root.querySelector(".ui-dropdown-options-container");
    if (dropdownMenu) {
     dropdownMenu.style.top = "auto";
     dropdownMenu.style.bottom = "100%";
@@ -742,12 +847,17 @@ export class SocialSection {
  constructor(label, ...hiddableElements) {
   this.element = document.createElement("lol-social-roster-group");
   this.element.addEventListener("post-render", () => this.onPostRender());
-  this.element.addEventListener("click", () => this.onClick());
+  this.element.addEventListener("click", (e) => this.onClick(e));
 
   this.label = label;
   this.hiddableElements = hiddableElements;
+  this.onPopOut = null;
 
   this.waitRender();
+ }
+
+ setOnPopOut(fn) {
+  this.onPopOut = typeof fn === "function" ? fn : null;
  }
 
  waitRender() {
@@ -760,12 +870,31 @@ export class SocialSection {
  }
 
  onPostRender() {
-  this.element.querySelector("span").innerText = this.label;
-  this.element.querySelector(".group-header").removeAttribute("graggable");
+  const span = this.element.querySelector("span");
+  const groupHeader = this.element.querySelector(".group-header");
+  if (span) span.innerText = this.label;
+  if (groupHeader) {
+   groupHeader.removeAttribute("graggable");
+   if (this.onPopOut) {
+    const popOutBtn = document.createElement("button");
+    popOutBtn.type = "button";
+    popOutBtn.className = "controlado-pop-out-btn";
+    popOutBtn.title = "Pop out";
+    popOutBtn.setAttribute("aria-label", "Pop out");
+    popOutBtn.innerText = "⤢";
+    popOutBtn.addEventListener("click", (e) => {
+     e.stopPropagation();
+     this.onPopOut();
+    });
+    groupHeader.appendChild(popOutBtn);
+   }
+  }
  }
 
- onClick() {
+ onClick(e) {
+  if (e.target.closest(".controlado-pop-out-btn")) return;
   this.hiddableElements.forEach(element => element.classList.toggle("hidden"));
-  this.element.querySelector(".arrow").toggleAttribute("open");
+  const arrow = this.element.querySelector(".arrow");
+  if (arrow) arrow.toggleAttribute("open");
  }
 }
