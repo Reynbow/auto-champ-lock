@@ -1,6 +1,6 @@
 /**
  * @author balaclava + fork by reynbow
- * @name Auto Champ Lock v1.4.0
+ * @name Auto Champ Lock v1.5.0
  * @link https://github.com/Reynbow/auto-champ-lock/releases
  * @description 1 ban + role-based auto pick (top/jungle/mid/support/adc)
  */
