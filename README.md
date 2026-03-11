@@ -15,11 +15,11 @@ Fork of `auto-champion-select` with:
 
 Role-based pick and ban panel:
 
-![Role Pick UI](./screenshots/role-pick-ui.png)
+![Role Pick UI](./screenshots/role-pick-ui-2.png)
 
 Champ-select lock-in toggle:
 
-![Lock In Toggle](./screenshots/lock-in-toggle.png)
+![Lock In Toggle](./screenshots/lock-in-toggle-2.png)
 
 Champion picker modal (pop-out):
 
