@@ -1,5 +1,5 @@
 # Build release zip with only .js files for Pengu Loader
-param([string]$Version = "1.5.1")
+param([string]$Version = "1.5.2")
 
 $PluginName = "auto-champ-lock"
 $ZipName = "$PluginName-$Version.zip"

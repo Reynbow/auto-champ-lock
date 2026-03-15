@@ -1,6 +1,6 @@
 /**
  * @author reynbow
- * @name Auto Champ Lock v1.5.1
+ * @name Auto Champ Lock v1.5.2
  * @link https://github.com/Reynbow/auto-champ-lock/releases
  * @description 1 ban + role-based auto pick (top/jungle/mid/support/adc)
  */
@@ -40,7 +40,7 @@ function toggleFavorite(champId) {
  setFavorites(ids);
  return ids.includes(champId);
 }
-const LOCK_IN_MOUNT_DELAY_MS = 1000;
+const LOCK_IN_MOUNT_DELAY_MS = 500;
 let lockInMountTimeoutId = null;
 
 const ROLE_ICON_URLS = {
@@ -250,7 +250,8 @@ function createChampionPickerModal(champions, currentId, onSelect, options = {})
    const favs = getFavorites();
    let filtered = champions.filter(c => {
     const id = c.id ?? c.championId;
-    return id != null && id > 0 && c.name && c.name.toLowerCase().includes(filter.toLowerCase());
+    const notDoomBotForBan = !isBan || !isDoomBotChampion(c);
+    return id != null && id > 0 && notDoomBotForBan && c.name && c.name.toLowerCase().includes(filter.toLowerCase());
    });
    filtered.sort((a, b) => {
     const aId = a.id ?? a.championId;
@@ -1216,7 +1217,7 @@ async function getPlayableChampions() {
  while (!response.ok) {
   console.debug("auto-champ-lock(owned-champions-minimal): Retrying...");
   response = await request("GET", "/lol-champions/v1/owned-champions-minimal");
-  await sleep(1000);
+  await sleep(500);
  }
 
  const responseData = await response.json();
@@ -1233,15 +1234,20 @@ async function getPlayableChampions() {
 async function getAllChampions() {
  const response = await request("GET", "/lol-game-data/assets/v1/champion-summary.json");
  const responseData = await response.json();
- responseData.sort((a, b) => a.name.localeCompare(b.name));
- return responseData;
+ const filteredChampions = responseData.filter(champion => !isDoomBotChampion(champion));
+ filteredChampions.sort((a, b) => a.name.localeCompare(b.name));
+ return filteredChampions;
+}
+
+function isDoomBotChampion(champion) {
+ return typeof champion?.name === "string" && champion.name.toLowerCase().includes("doom bot");
 }
 
 
 async function onReadyCheck() {
  if (autoAcceptCheckbox.config.enabled === true) {
-  console.debug("auto-champ-lock(auto-accept): Ready check detected, accepting in 2 seconds...");
-  await sleep(2000);
+  console.debug("auto-champ-lock(auto-accept): Ready check detected, accepting in 0.5 seconds...");
+  await sleep(500);
   await autoAccept();
  }
 }
@@ -1260,7 +1266,7 @@ window.addEventListener("load", async () => {
 
  let socialContainer = getSocialContainer();
  while (!socialContainer) {
-  await sleep(200);
+  await sleep(500);
   socialContainer = getSocialContainer();
  }
 
